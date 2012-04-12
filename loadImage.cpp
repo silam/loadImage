@@ -400,7 +400,7 @@ void display(void)
 	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*Translate(0,0,1));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texName[0]); //which texture do we want?
-	glDrawArrays( GL_TRIANGLES, 0, VertexCount );
+	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
 
 	/*
 	mv = camera * RotateY(90)* Translate(0,0,1);
