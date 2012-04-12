@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="fshader-texture.glsl" />
+    <None Include="git.txt" />
     <None Include="vshader-texture.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

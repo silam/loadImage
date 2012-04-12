@@ -26,6 +26,7 @@
 
 int right_button_down = FALSE;
 int left_button_down = FALSE;
+int middle_button_down = FALSE;
 
 int prevMouseX;
 int prevMouseY;
@@ -42,9 +43,14 @@ static GLuint * texName;
 GLuint * vao;
 GLuint * vbo;
 
-
+// EARTH 
 GLuint * spherevao;
 GLuint * spherevbo;
+
+// CLOUD
+GLuint * cloudvao;
+GLuint * cloudvbo;
+
 
 //our modelview and perspective matrices
 mat4 mv, p;
@@ -63,13 +69,23 @@ int multiflag = 0;
 
 
 
-
+/////// EARTH
 int space = 10; //10; // 259200
 int VertexCount = (180 / space) * (360 / space) * 4; // 2592
 
-
 vec4 squareverts[6];
 vec2 texcoords[6];
+
+
+int rotateYEarth;
+int rotateXEarth;
+
+
+///////////////
+// CLOUD
+//////////////
+
+
 
 //Modified slightly from the OpenIL tutorials
 ILuint loadTexFile(const char* filename){
@@ -111,6 +127,9 @@ ILuint loadTexFile(const char* filename){
 		exit(1);
 	}
 }
+
+
+
 void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, double K, double Z) {
     
 	int n;
@@ -169,6 +188,12 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
     
 	}
 }
+
+void CreateCloudSphere(vec4 verts[2592], vec2 texcoords[2592], double R, double H, double K, double Z)
+{
+	CreateSphere (verts, texcoords, 5.5, 0, 0, 0);
+}
+
 void createSquare(vec4 squareverts[6], vec2 texcoords[6])
 {
    
@@ -219,33 +244,37 @@ void init(void)
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glEnable(GL_DEPTH_TEST);
 
-   /*squareverts = new vec4[6];
-   texcoords = new vec2[6];
-*/
-   /*squareverts[0] = vec4(-1, -1, 0, 1); 
-   texcoords[0] = vec2(0, 0);
-   squareverts[1] = vec4(1, -1, 0, 1);
-   texcoords[1] = vec2(1, 0);
-   squareverts[2] = vec4(1, 1, 0, 1);
-   texcoords[2] = vec2(1, 1);
-   squareverts[3] = vec4(1, 1, 0, 1);
-   texcoords[3] = vec2(1, 1);
-   squareverts[4] = vec4(-1, 1, 0, 1);
-   texcoords[4] = vec2(0, 1);
-   squareverts[5] = vec4(-1, -1, 0, 1);
-   texcoords[5] = vec2(0, 0);*/
+	rotateYEarth = 0;
+	rotateXEarth = 0;
 
+     
    //squareverts = new vec4[6];
 
-   createSquare(squareverts, texcoords);
+   //createSquare(squareverts, texcoords);
 
+	////////////////////////////
+	// Creating EARTH
+	///////////////////////////
 	vec4 sphereverts[2592];
 	vec2 spheretexcoords[2592]; // 2592
 
 
-	CreateSphere(sphereverts, spheretexcoords, 1, 0,0,0);
+	CreateSphere(sphereverts, spheretexcoords, 2, 0,0,0);
 
 
+	////////////////////////////
+	// Creating CLOUD
+	///////////////////////////
+	vec4 cloudverts[2592];
+	vec2 cloudtexcoords[2592]; 
+
+	CreateSphere(cloudverts, cloudtexcoords, 2.1, 0,0,0);
+
+
+
+	//////////////////////////////////////
+	// Initialize Shader
+	//////////////////////////////////////
    program = InitShader( "vshader-texture.glsl", "fshader-texture.glsl" );
 
 
@@ -292,6 +321,10 @@ void init(void)
 		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
 	}
 
+	/////////////////////////////////////////
+	// EARTH BUFFERS
+	////////////////////////////////////////////////////
+
 	if ( true )
 	{
 		/////////////////////////////////////////
@@ -322,10 +355,46 @@ void init(void)
 		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
 
 	}
+
+	/////////////////////////////////////////
+	// CLOUD BUFFERS
+	////////////////////////////////////////////////////
+
+	if ( true )
+	{
+		/////////////////////////////////////////
+		// Create a vertex array object
+		cloudvao = new GLuint[1];
+		cloudvbo = new GLuint[3];
+
+
+		glGenVertexArrays( 1, &cloudvao[0] );
+
+		// Create and initialize any buffer objects
+		glBindVertexArray( cloudvao[0] );
+		glGenBuffers( 2, &cloudvbo[0] );
+		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[0] );
+		glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec4), cloudverts, GL_STATIC_DRAW);
+
+		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[1] );
+		glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec2), cloudtexcoords, GL_STATIC_DRAW);
+
+		ilBindImage(ilTexID[1]); /* Binding of IL image name */
+		loadTexFile("images/earthcloudmap.png");
+		glBindTexture(GL_TEXTURE_2D, texName[1]); //bind OpenGL texture name
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   //Note how we depend on OpenIL to supply information about the file we just loaded in
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
+		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
+
+	}
+
 	/////////////////////////////////////////
    ////////////////////////////////////////////////////
 	//Now repeat the process for the second image
-	ilBindImage(ilTexID[1]);
+	/*ilBindImage(ilTexID[1]);
 	
 	glBindTexture(GL_TEXTURE_2D, texName[1]);
 	loadTexFile("images/alpaca.png");
@@ -334,11 +403,11 @@ void init(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
 	   ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
-
+*/
 	////////////////////////////////////////////////////
 	//And the third image
 
-	ilBindImage(ilTexID[2]);
+	/*ilBindImage(ilTexID[2]);
 	glBindTexture(GL_TEXTURE_2D, texName[2]);
 	loadTexFile("images/opengl.png");
 
@@ -346,7 +415,7 @@ void init(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
 	   ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
-
+*/
 
 	////////////////////////////////////////////////
     ilDeleteImages(3, ilTexID); //we're done with OpenIL, so free up the memory
@@ -389,6 +458,20 @@ void init(void)
 		glEnableVertexAttribArray(texCoord);
 		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	}
+
+
+	if (true)
+	{
+		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[0] );
+		vPosition = glGetAttribLocation(program, "vPosition");
+		glEnableVertexAttribArray(vPosition);
+		glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[1] );
+		texCoord = glGetAttribLocation(program, "texCoord");
+		glEnableVertexAttribArray(texCoord);
+		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	}
 }
 
 void display(void)
@@ -396,11 +479,21 @@ void display(void)
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
 	
-    mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(view_rotx) * RotateY(view_roty) * RotateZ(view_rotz);
+    //mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(view_rotx) * RotateY(view_roty) * RotateZ(view_rotz);
+
+    mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(rotateXEarth) * RotateY(rotateYEarth)* RotateX(-90.0); //RotateX(view_rotx) * RotateY(view_roty);
 	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*Translate(0,0,1));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texName[0]); //which texture do we want?
 	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+	
+	/*
+	mv = camera * Translate(0,0,0);
+	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*Translate(0,0,1));
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texName[1]); //which texture do we want?
+	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+	*/
 
 	/*
 	mv = camera * RotateY(90)* Translate(0,0,1);
@@ -442,17 +535,27 @@ void keyboard (unsigned char key, int x, int y)
 void mouse_dragged(int x, int y) {
 	double thetaY, thetaX;
 	if (left_button_down) {
-		thetaY = 360.0 *(x-prevMouseX)/WIDTH;    
+
+		rotateYEarth += 1;
+
+		/*thetaY = 360.0 *(x-prevMouseX)/WIDTH;    
 		thetaX = 360.0 *(prevMouseY - y)/HEIGHT;
 		prevMouseX = x;
 		prevMouseY = y;
 		view_rotx += thetaX;
-		view_roty += thetaY;
+		view_roty += thetaY;*/
 	}
 	else if (right_button_down) {
-		z_distance = 5.0*(prevMouseY-y)/HEIGHT;
+
+		rotateXEarth += 1;
+		// z_distance = 5.0*(prevMouseY-y)/HEIGHT;
 	}
-  glutPostRedisplay();
+
+	else if (middle_button_down)
+	{
+		z_distance += 1;
+	}
+    glutPostRedisplay();
 }
 
 

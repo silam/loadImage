@@ -25,5 +25,6 @@
   <ItemGroup>
     <None Include="vshader-texture.glsl" />
     <None Include="fshader-texture.glsl" />
+    <None Include="git.txt" />
   </ItemGroup>
 </Project>
