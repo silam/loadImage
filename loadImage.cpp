@@ -18,8 +18,8 @@
 #pragma comment(lib,"ILU.lib")
 
 
-#define WIDTH 500
-#define HEIGHT 400
+#define WIDTH 800
+#define HEIGHT 700
 #define TRUE 1
 #define FALSE 0
 
@@ -37,7 +37,7 @@ double view_rotz = 0.0;
 double z_distance;
 
 //We need three texture files
-static GLuint * texName;
+static GLuint texName[3];
 
 
 GLuint * vao;
@@ -261,104 +261,32 @@ void init(void)
 
 	CreateSphere(sphereverts, spheretexcoords, 2, 0,0,0);
 
+	/////////////////////////////////////////
+	// Create a vertex array object
+	spherevao = new GLuint[1];
+	spherevbo = new GLuint[3];
+
+
+	glGenVertexArrays( 1, &spherevao[0] );
+
+	// Create and initialize any buffer objects
+	glBindVertexArray( spherevao[0] );
+	glGenBuffers( 2, &spherevbo[0] );
+	glBindBuffer( GL_ARRAY_BUFFER, spherevbo[0] );
+	glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec4), sphereverts, GL_STATIC_DRAW);
+
+	glBindBuffer( GL_ARRAY_BUFFER, spherevbo[1] );
+	glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec2), spheretexcoords, GL_STATIC_DRAW);
 
 	////////////////////////////
 	// Creating CLOUD
 	///////////////////////////
+
+	/*
 	vec4 cloudverts[2592];
 	vec2 cloudtexcoords[2592]; 
 
 	CreateSphere(cloudverts, cloudtexcoords, 2.1, 0,0,0);
-
-
-
-	//////////////////////////////////////
-	// Initialize Shader
-	//////////////////////////////////////
-   program = InitShader( "vshader-texture.glsl", "fshader-texture.glsl" );
-
-
-   ILuint * ilTexID = new ILuint[3]; /* ILuint is a 32bit unsigned integer.
-
-    //Variable texid will be used to store image name. */
-   texName = new GLuint[3];
-
-
-	ilInit(); /* Initialization of OpenIL */
-	ilGenImages(3, ilTexID); /* Generation of three image names for OpenIL image loading */
-	glGenTextures(3, texName); //and we eventually want the data in an OpenGL texture
- 
-	vao = new GLuint[1];
-	vbo = new GLuint[3];
-	
-
-	if (true)
-	{
-		//SetupShader(vao, vbo, squareverts, texcoords,ilTexID,texName);
-	}
-	else 
-	{
-		// Create a vertex array object
-		glGenVertexArrays( 1, &vao[0] );
-
-		// Create and initialize any buffer objects
-		glBindVertexArray( vao[0] );
-		glGenBuffers( 2, &vbo[0] );
-		glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
-		glBufferData( GL_ARRAY_BUFFER, sizeof(squareverts), squareverts, GL_STATIC_DRAW);
-
-		glBindBuffer( GL_ARRAY_BUFFER, vbo[1] );
-		glBufferData( GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
-
-		ilBindImage(ilTexID[0]); /* Binding of IL image name */
-		loadTexFile("images/Earth.png");
-		glBindTexture(GL_TEXTURE_2D, texName[0]); //bind OpenGL texture name
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	   //Note how we depend on OpenIL to supply information about the file we just loaded in
-		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
-		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
-	}
-
-	/////////////////////////////////////////
-	// EARTH BUFFERS
-	////////////////////////////////////////////////////
-
-	if ( true )
-	{
-		/////////////////////////////////////////
-		// Create a vertex array object
-		spherevao = new GLuint[1];
-		spherevbo = new GLuint[3];
-
-
-		glGenVertexArrays( 1, &spherevao[0] );
-
-		// Create and initialize any buffer objects
-		glBindVertexArray( spherevao[0] );
-		glGenBuffers( 2, &spherevbo[0] );
-		glBindBuffer( GL_ARRAY_BUFFER, spherevbo[0] );
-		glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec4), sphereverts, GL_STATIC_DRAW);
-
-		glBindBuffer( GL_ARRAY_BUFFER, spherevbo[1] );
-		glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec2), spheretexcoords, GL_STATIC_DRAW);
-
-		ilBindImage(ilTexID[0]); /* Binding of IL image name */
-		loadTexFile("images/Earth.png");
-		glBindTexture(GL_TEXTURE_2D, texName[0]); //bind OpenGL texture name
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	   //Note how we depend on OpenIL to supply information about the file we just loaded in
-		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
-		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
-
-	}
-
-	/////////////////////////////////////////
-	// CLOUD BUFFERS
-	////////////////////////////////////////////////////
 
 	if ( true )
 	{
@@ -379,9 +307,37 @@ void init(void)
 		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[1] );
 		glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec2), cloudtexcoords, GL_STATIC_DRAW);
 
-		ilBindImage(ilTexID[1]); /* Binding of IL image name */
-		loadTexFile("images/earthcloudmap.png");
-		glBindTexture(GL_TEXTURE_2D, texName[1]); //bind OpenGL texture name
+	
+
+	}
+	*/
+
+
+	//////////////////////////////////////
+	// Initialize Shader
+	//////////////////////////////////////
+   program = InitShader( "vshader-texture.glsl", "fshader-texture.glsl" );
+
+
+   ILuint ilTexID[3]; /* ILuint is a 32bit unsigned integer.
+
+    //Variable texid will be used to store image name. */
+   
+
+	ilInit(); /* Initialization of OpenIL */
+	ilGenImages(3, ilTexID); /* Generation of three image names for OpenIL image loading */
+	glGenTextures(3, texName); //and we eventually want the data in an OpenGL texture
+ 
+	/////////////////////////////////////////
+	// EARTH BUFFERS
+	////////////////////////////////////////////////////
+	
+
+	if ( true )
+	{
+		ilBindImage(ilTexID[0]); /* Binding of IL image name */
+		loadTexFile("images/Earth.png");
+		glBindTexture(GL_TEXTURE_2D, texName[0]); //bind OpenGL texture name
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -389,7 +345,61 @@ void init(void)
 		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
 		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
 
+
 	}
+	
+	
+	if (true)
+	{
+		ilBindImage(ilTexID[1]); /* Binding of IL image name */
+		glBindTexture(GL_TEXTURE_2D, texName[1]); //bind OpenGL texture name
+		loadTexFile("images/earthcloudmap.png");
+		
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   //Note how we depend on OpenIL to supply information about the file we just loaded in
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
+		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
+	}
+
+
+	////////////////////////////////////////////////
+    ilDeleteImages(3, ilTexID); //we're done with OpenIL, so free up the memory
+
+	////////////////////////////////////////////////////
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	model_view = glGetUniformLocation(program, "model_view");
+	projection = glGetUniformLocation(program, "projection");
+	
+	texMap = glGetUniformLocation(program, "texture");
+	glUniform1i(texMap, 0);//assign this one to texture unit 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+		
+
+	
+	/////////////////////////////////////////
+	// CLOUD BUFFERS
+	////////////////////////////////////////////////////
+
+	
 
 	/////////////////////////////////////////
    ////////////////////////////////////////////////////
@@ -417,26 +427,14 @@ void init(void)
 	   ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
 */
 
-	////////////////////////////////////////////////
-    ilDeleteImages(3, ilTexID); //we're done with OpenIL, so free up the memory
-
-	////////////////////////////////////////////////////
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	model_view = glGetUniformLocation(program, "model_view");
-	projection = glGetUniformLocation(program, "projection");
 	
-	texMap = glGetUniformLocation(program, "texture");
-	glUniform1i(texMap, 0);//assign this one to texture unit 0
 	/////////////////////////////////////////////////////////////////
 	///// bind VAO and VBO
 
 
 	if ( false )
 	{
-		glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
+		/*glBindBuffer( GL_ARRAY_BUFFER, vbo[0] );
 		vPosition = glGetAttribLocation(program, "vPosition");
 		glEnableVertexAttribArray(vPosition);
 		glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
@@ -444,7 +442,7 @@ void init(void)
 		glBindBuffer( GL_ARRAY_BUFFER, vbo[1] );
 		texCoord = glGetAttribLocation(program, "texCoord");
 		glEnableVertexAttribArray(texCoord);
-		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);*/
 	}
 	else
 	{
@@ -460,9 +458,9 @@ void init(void)
 	}
 
 
-	if (true)
-	{
-		glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[0] );
+	/*if (true)
+	{ 
+		 glBindBuffer( GL_ARRAY_BUFFER, cloudvbo[0] );
 		vPosition = glGetAttribLocation(program, "vPosition");
 		glEnableVertexAttribArray(vPosition);
 		glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
@@ -471,9 +469,10 @@ void init(void)
 		texCoord = glGetAttribLocation(program, "texCoord");
 		glEnableVertexAttribArray(texCoord);
 		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	}
+	}*/
 }
-
+////////////////////////////////
+////////////////////////////////
 void display(void)
 {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -481,19 +480,23 @@ void display(void)
 	
     //mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(view_rotx) * RotateY(view_roty) * RotateZ(view_rotz);
 
-    mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(rotateXEarth) * RotateY(rotateYEarth)* RotateX(-90.0); //RotateX(view_rotx) * RotateY(view_roty);
-	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*Translate(0,0,1));
+    
+	
 	glActiveTexture(GL_TEXTURE0);
+
+	mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0)) * RotateX(-90.0); //RotateX(view_rotx) * RotateY(view_roty);
+
+	// mv = mv * RotateZ(rotateYEarth);
+
+	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv * RotateZ(rotateYEarth)*Translate(0,0,0));
 	glBindTexture(GL_TEXTURE_2D, texName[0]); //which texture do we want?
 	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
-	
-	/*
-	mv = camera * Translate(0,0,0);
-	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*Translate(0,0,1));
-	glActiveTexture(GL_TEXTURE1);
+
+
+
+	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*RotateZ(rotateYEarth / 2)*Scale(1.02,1.02,1.02)*Translate(0,0,0));
 	glBindTexture(GL_TEXTURE_2D, texName[1]); //which texture do we want?
 	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
-	*/
 
 	/*
 	mv = camera * RotateY(90)* Translate(0,0,1);
