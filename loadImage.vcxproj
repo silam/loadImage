@@ -78,8 +78,10 @@
     <ClCompile Include="loadImage.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="fshader-lightning.glsl" />
     <None Include="fshader-texture.glsl" />
     <None Include="git.txt" />
+    <None Include="vshader-lightning.glsl" />
     <None Include="vshader-texture.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

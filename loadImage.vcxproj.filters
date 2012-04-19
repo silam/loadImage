@@ -26,5 +26,7 @@
     <None Include="vshader-texture.glsl" />
     <None Include="fshader-texture.glsl" />
     <None Include="git.txt" />
+    <None Include="fshader-lightning.glsl" />
+    <None Include="vshader-lightning.glsl" />
   </ItemGroup>
 </Project>

@@ -37,15 +37,25 @@ double view_rotz = 0.0;
 double z_distance;
 
 //We need three texture files
-static GLuint texName[3];
+static GLuint texName[5];
 
 
 GLuint * vao;
 GLuint * vbo;
 
+
+GLuint vAmbientDiffuseColor;
+GLuint vSpecularColor;
+GLuint vSpecularExponent;
+GLuint vNormal;
+GLuint light_position;
+GLuint light_color;
+GLuint ambient_light;
+
 // EARTH 
 GLuint * spherevao;
 GLuint * spherevbo;
+GLuint * spherenormals;
 
 // CLOUD
 GLuint * cloudvao;
@@ -62,7 +72,11 @@ GLuint vPosition;
 GLuint texCoord;
 GLuint texMap;
 
-GLuint program;
+
+GLuint normalMap;
+GLuint specMap;
+
+GLuint program, light_program;
 
 int multiflag = 0;
 
@@ -130,7 +144,7 @@ ILuint loadTexFile(const char* filename){
 
 
 
-void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, double K, double Z) {
+void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], vec3 normals[2592],  double R, double H, double K, double Z) {
     
 	int n;
     double a;
@@ -139,7 +153,7 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
     
 	for( b = 0; b <= 180 - space; b+=space){
        
-		for( a = 0; a <= 360 - space; a+=space){
+		for( a = 0; a <= 180 - space; a+=space){
             
 			verts[n] = vec4( R * sin((a) / 180 * M_PI) * sin((b) / 180 * M_PI) - H,
 								   R * cos((a) / 180 * M_PI) * sin((b) / 180 * M_PI) + K,
@@ -147,7 +161,8 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
 								   1);
             texcoords[n] = vec2((a) / 360 , (2 * b) / 360);
             
-
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+			
 			n++;
             
 			verts[n] = vec4(R * sin((a) / 180 * M_PI) * sin((b + space) / 180 * M_PI) - H,
@@ -159,6 +174,8 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
 							(2 *  (b + space)) / 360);
             
             
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
 			n++;
             
 
@@ -171,6 +188,8 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
 			texcoords[n] = vec2((a + space) / 360 ,  (2 *  (b)) / 360 );
 
 
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
 			n++;
             
 			verts[n] = vec4( R * sin((a + space) / 180 * M_PI) * sin((b + space) /180 * M_PI) - H,
@@ -180,6 +199,8 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
             
 			texcoords[n] = vec2((a + space) / 360, (2 *  (b + space)) / 360);
 
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
 			n++;
             
 
@@ -187,11 +208,72 @@ void CreateSphere (vec4 verts[2592], vec2 texcoords[2592], double R, double H, d
 		}
     
 	}
+
+
+
+	for( b = 0; b <= 180 - space; b+=space){
+       
+		for( a = 180; a <= 360 - space; a+=space){
+            
+			verts[n] = vec4( R * sin((a) / 180 * M_PI) * sin((b) / 180 * M_PI) - H,
+								   R * cos((a) / 180 * M_PI) * sin((b) / 180 * M_PI) + K,
+								   R * cos((b) / 180 * M_PI) - Z, 
+								   1);
+            texcoords[n] = vec2((a) / 360 , (2 * b) / 360);
+            
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+			
+			n++;
+            
+			verts[n] = vec4(R * sin((a) / 180 * M_PI) * sin((b + space) / 180 * M_PI) - H,
+					             R * cos((a) / 180 * M_PI) * sin((b + space) / 180 * M_PI) + K,
+								 R * cos((b + space) / 180 * M_PI) - Z,
+								 1);
+
+			texcoords[n] = vec2((a) / 360 , 
+							(2 *  (b + space)) / 360);
+            
+            
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
+			n++;
+            
+
+            
+			verts[n] = vec4(R * sin((a + space) / 180 * M_PI) * sin((b) / 180 * M_PI) - H,
+								R * cos((a + space) / 180 * M_PI) * sin((b) / 180 * M_PI) + K,
+								R * cos((b) / 180 * M_PI) - Z,
+								1);
+         
+			texcoords[n] = vec2((a + space) / 360 ,  (2 *  (b)) / 360 );
+
+
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
+			n++;
+            
+			verts[n] = vec4( R * sin((a + space) / 180 * M_PI) * sin((b + space) /180 * M_PI) - H,
+									R * cos((a + space) / 180 * M_PI) * sin((b + space) / 180 * M_PI) + K,
+									 R * cos((b + space) / 180 * M_PI) - Z,
+									 1);
+            
+			texcoords[n] = vec2((a + space) / 360, (2 *  (b + space)) / 360);
+
+			normals[n] = vec3(verts[n].x, verts[n].y, verts[n].z);
+
+			n++;
+            
+
+            
+		}
+    
+	}
+
 }
 
 void CreateCloudSphere(vec4 verts[2592], vec2 texcoords[2592], double R, double H, double K, double Z)
 {
-	CreateSphere (verts, texcoords, 5.5, 0, 0, 0);
+	//CreateSphere (verts, texcoords, 5.5, 0, 0, 0);
 }
 
 void createSquare(vec4 squareverts[6], vec2 texcoords[6])
@@ -239,6 +321,36 @@ void SetupShader(GLuint vao[1], GLuint vbo[3], vec4 squareverts[6], vec2 texcoor
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
 	ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
 }
+
+void setupLightShader(GLuint prog){
+	
+	glUseProgram( prog );
+	//glLinkProgram( prog);
+	//model_view = glGetUniformLocation(prog, "model_view");
+	//projection = glGetUniformLocation(prog, "projection");
+	
+	vAmbientDiffuseColor = glGetAttribLocation(prog, "vAmbientDiffuseColor");
+	vSpecularColor = glGetAttribLocation(prog, "vSpecularColor");
+	vSpecularExponent = glGetAttribLocation(prog, "vSpecularExponent");
+	light_position = glGetUniformLocation(prog, "light_position");
+	light_color = glGetUniformLocation(prog, "light_color");
+	ambient_light = glGetUniformLocation(prog, "ambient_light");
+
+	glBindVertexArray( spherevao[0] );
+
+	glBindBuffer( GL_ARRAY_BUFFER, spherevbo[0] );
+	vPosition = glGetAttribLocation(prog, "vPosition");
+	glEnableVertexAttribArray(vPosition);
+	glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer( GL_ARRAY_BUFFER, spherevbo[2] );
+	vNormal = glGetAttribLocation(prog, "vNormal");
+	glEnableVertexAttribArray(vNormal);
+	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glUseProgram(program);
+}
+
 void init(void)
 {    
    glClearColor (0.0, 0.0, 0.0, 0.0);
@@ -252,14 +364,16 @@ void init(void)
 
    //createSquare(squareverts, texcoords);
 
+
 	////////////////////////////
 	// Creating EARTH
 	///////////////////////////
 	vec4 sphereverts[2592];
 	vec2 spheretexcoords[2592]; // 2592
+	vec3 spherenormals[2592];
 
 
-	CreateSphere(sphereverts, spheretexcoords, 2, 0,0,0);
+	CreateSphere(sphereverts, spheretexcoords, spherenormals, 2, 0,0,0);
 
 	/////////////////////////////////////////
 	// Create a vertex array object
@@ -277,6 +391,12 @@ void init(void)
 
 	glBindBuffer( GL_ARRAY_BUFFER, spherevbo[1] );
 	glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec2), spheretexcoords, GL_STATIC_DRAW);
+
+
+	//glBindBuffer( GL_ARRAY_BUFFER, spherevbo[2] );
+	//glBufferData( GL_ARRAY_BUFFER, VertexCount*sizeof(vec3), spherenormals, GL_STATIC_DRAW);
+
+
 
 	////////////////////////////
 	// Creating CLOUD
@@ -317,22 +437,25 @@ void init(void)
 	// Initialize Shader
 	//////////////////////////////////////
    program = InitShader( "vshader-texture.glsl", "fshader-texture.glsl" );
+   
+   // light_program = InitShader( "vshader-lightning.glsl", "fshader-lightning.glsl" );
 
+   glUseProgram(program);
 
-   ILuint ilTexID[3]; /* ILuint is a 32bit unsigned integer.
+   ILuint ilTexID[5]; /* ILuint is a 32bit unsigned integer.
 
     //Variable texid will be used to store image name. */
    
 
 	ilInit(); /* Initialization of OpenIL */
-	ilGenImages(3, ilTexID); /* Generation of three image names for OpenIL image loading */
-	glGenTextures(3, texName); //and we eventually want the data in an OpenGL texture
+	ilGenImages(5, ilTexID); /* Generation of three image names for OpenIL image loading */
+	glGenTextures(5, texName); //and we eventually want the data in an OpenGL texture
  
 	/////////////////////////////////////////
 	// EARTH BUFFERS
 	////////////////////////////////////////////////////
 	
-
+	// load color map
 	if ( true )
 	{
 		ilBindImage(ilTexID[0]); /* Binding of IL image name */
@@ -348,6 +471,8 @@ void init(void)
 
 	}
 	
+
+	// load cloud
 	
 	if (true)
 	{
@@ -364,8 +489,54 @@ void init(void)
 	}
 
 
+	// Spec map
+	if (true)
+	{
+		ilBindImage(ilTexID[2]); /* Binding of IL image name */
+		glBindTexture(GL_TEXTURE_2D, texName[2]); //bind OpenGL texture name
+		loadTexFile("images/EarthSpec.png");
+		
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   //Note how we depend on OpenIL to supply information about the file we just loaded in
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
+		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
+	}
+
+
+	// Normal map
+	if (true)
+	{
+		ilBindImage(ilTexID[3]); /* Binding of IL image name */
+		glBindTexture(GL_TEXTURE_2D, texName[3]); //bind OpenGL texture name
+		loadTexFile("images/EarthNormal.png");
+		
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   //Note how we depend on OpenIL to supply information about the file we just loaded in
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
+		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
+	}
+
+	// Night map
+	if (true)
+	{
+		ilBindImage(ilTexID[4]); /* Binding of IL image name */
+		glBindTexture(GL_TEXTURE_2D, texName[4]); //bind OpenGL texture name
+		loadTexFile("images/EarthNight.png");
+		
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	   //Note how we depend on OpenIL to supply information about the file we just loaded in
+		glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),0,
+		ilGetInteger(IL_IMAGE_FORMAT), ilGetInteger(IL_IMAGE_TYPE), ilGetData());
+	}
+
 	////////////////////////////////////////////////
-    ilDeleteImages(3, ilTexID); //we're done with OpenIL, so free up the memory
+    ilDeleteImages(5, ilTexID); //we're done with OpenIL, so free up the memory
 
 	////////////////////////////////////////////////////
 
@@ -375,24 +546,21 @@ void init(void)
 	model_view = glGetUniformLocation(program, "model_view");
 	projection = glGetUniformLocation(program, "projection");
 	
+	// setup lightning
+	vAmbientDiffuseColor = glGetAttribLocation(program, "vAmbientDiffuseColor");
+	vSpecularColor = glGetAttribLocation(program, "vSpecularColor");
+	vSpecularExponent = glGetAttribLocation(program, "vSpecularExponent");
+	light_position = glGetUniformLocation(program, "light_position");
+	light_color = glGetUniformLocation(program, "light_color");
+	ambient_light = glGetUniformLocation(program, "ambient_light");
+
+
 	texMap = glGetUniformLocation(program, "texture");
 	glUniform1i(texMap, 0);//assign this one to texture unit 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-		
-
-		
+	normalMap = glGetUniformLocation(program, "normalMap");
+	glUniform1i(normalMap, 1);//assign normal map to 2nd texture unit
+	specMap = glGetUniformLocation(program, "spectexture");
+	glUniform1i(specMap, 2);//assign spec map to 3nd texture unit
 
 	
 	/////////////////////////////////////////
@@ -470,33 +638,71 @@ void init(void)
 		glEnableVertexAttribArray(texCoord);
 		glVertexAttribPointer(texCoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	}*/
+
+
 }
 ////////////////////////////////
 ////////////////////////////////
 void display(void)
 {
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	glVertexAttrib4fv(vAmbientDiffuseColor, vec4(.7, .7, .7, 1));
+	glVertexAttrib4fv(vSpecularColor, vec4(.7f,.7f,.7f,1.0f));
+	glVertexAttrib1f(vSpecularExponent, 30);
+	glUniform4fv(light_position, 1, mv*vec4(10, 10, 50, 1));
+	glUniform4fv(light_color, 1, vec4(1,1,1,1));
+	glUniform4fv(ambient_light, 1, vec4(.1, .1, .1, 1));
+
+	//mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0)) * RotateX(-90.0) * RotateX(view_rotx) * RotateY(view_roty);
   
-	
-    //mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(view_rotx) * RotateY(view_roty) * RotateZ(view_rotz);
-
-    
-	
-	glActiveTexture(GL_TEXTURE0);
-
 	mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0)) * RotateX(-90.0); //RotateX(view_rotx) * RotateY(view_roty);
 
-	// mv = mv * RotateZ(rotateYEarth);
+	/*if ( true )
+	{
+		glUseProgram(light_program);
 
-	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv * RotateZ(rotateYEarth)*Translate(0,0,0));
-	glBindTexture(GL_TEXTURE_2D, texName[0]); //which texture do we want?
-	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+		glUniformMatrix4fv(model_view, 1, GL_TRUE, mv);
+
+		glVertexAttrib4fv(vAmbientDiffuseColor, vec4(.2, 0.2, 0.2, 1));
+		glVertexAttrib4fv(vSpecularColor, vec4(.9f,0.9f,.9f,1.0f));
+		glVertexAttrib1f(vSpecularExponent, 10.0);
+
+		glUniform4fv(light_position, 1, mv*vec4(50, 50, 50, 1));
+		glUniform4fv(light_color, 1, vec4(1,1,1,1));
+		glUniform4fv(ambient_light, 1, vec4(.5, .5, .5, 5));
+
+		glBindVertexArray( spherevao[0] );
+		glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+	}*/
+
+    //mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0))* RotateX(view_rotx) * RotateY(view_roty) * RotateZ(view_rotz);
+
+    if ( true )
+	{
+			
+		glUniformMatrix4fv(model_view, 1, GL_TRUE, mv);
+
+		glActiveTexture(GL_TEXTURE0);
+
+		//mat4 camera = mv =  LookAt(vec4(0,0,5.0+z_distance,1),vec4(0,0,0,1),vec4(0,1,0,0)) * RotateX(-90.0); //RotateX(view_rotx) * RotateY(view_roty);
+
+		// mv = mv * RotateZ(rotateYEarth);
+
+		glUniformMatrix4fv(model_view, 1, GL_TRUE, mv * RotateZ(rotateYEarth)*Translate(0,0,0));
+		glBindTexture(GL_TEXTURE_2D, texName[0]); //which texture do we want?
+		glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+
+
+		// CLOUD
+		//glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*RotateZ(rotateYEarth / 2)*Scale(1.02,1.02,1.02)*Translate(0,0,0));
+		//glBindTexture(GL_TEXTURE_2D, texName[1]); //which texture do we want?
+		//glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
+	}
 
 
 
-	glUniformMatrix4fv(model_view, 1, GL_TRUE, mv*RotateZ(rotateYEarth / 2)*Scale(1.02,1.02,1.02)*Translate(0,0,0));
-	glBindTexture(GL_TEXTURE_2D, texName[1]); //which texture do we want?
-	glDrawArrays( GL_QUAD_STRIP, 0, VertexCount );
 
 	/*
 	mv = camera * RotateY(90)* Translate(0,0,1);
@@ -511,6 +717,7 @@ void display(void)
 	glDrawArrays( GL_TRIANGLES, 0, 6 );
 	*/
 
+	glFlush();
    glutSwapBuffers();
 
 
